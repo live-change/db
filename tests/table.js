@@ -1,14 +1,5 @@
 const test = require('tape')
-const levelup = require('levelup')
-//const leveldown = require('leveldown')
-const rocksdb = require('rocksdb')
-const memdown = require('memdown')
-const subleveldown = require('subleveldown')
-const encoding = require('encoding-down')
 const rimraf = require("rimraf")
-
-const Database = require("../lib/Database.js")
-const Store = require('@live-change/db-store-level')
 
 const dbPath = `./test.t.db`
 rimraf.sync(dbPath)
@@ -29,19 +20,14 @@ let messages = [
 ]
 
 test("store range observable", t => {
-  t.plan(5)
+  t.plan(4)
 
-  let level, db, usersTable, messagesTable
+  let db, usersTable, messagesTable
 
   t.test('open database', async t => {
     t.plan(1)
-    level = levelup(rocksdb(dbPath), { infoLogLevel: 'debug' }, function (err, lvl) {
-      if(err) throw new Error(err)
-      db = new Database({}, (name, config) => {
-        return new Store(subleveldown(level, name, { keyEncoding: 'ascii', valueEncoding: 'json' }))
-      })
-      t.pass('opened')
-    })
+    db = require('./utils/createDb.js')(dbPath)
+    t.pass('opened')
   })
 
   t.test("create tables", async t => {
@@ -58,25 +44,9 @@ test("store range observable", t => {
     t.pass("data inserted to database")
   })
 
-  t.test("read everything", async t => {
-    t.plan(1)
-    level.createReadStream({ keys: true, values: true })
-      .on('data', function ({ key, value }) {
-        console.log("key:", key.toString('ascii') )
-        console.log("value:", value.toString('ascii') )
-      })
-      .on('error', function (err) {
-      })
-      .on('close', function () {
-      })
-      .on('end', function () {
-        t.pass("readed")
-      })
-  })
-
   t.test("close and remove database", async t => {
     t.plan(2)
-    await level.close()
+    await db.close()
     t.pass('closed')
     rimraf(dbPath, (err) => {
       if(err) return t.fail(err)
