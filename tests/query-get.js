@@ -1,20 +1,8 @@
 const test = require('tape')
-const levelup = require('levelup')
-const leveldown = require('leveldown')
-const subleveldown = require('subleveldown')
-const encoding = require('encoding-down')
 const rimraf = require("rimraf")
 
-const Database = require("../lib/Database.js")
-const Store = require('@live-change/db-store-level')
-
 const dbPath = `./test.qg.db`
-rimraf.sync(dbPath)
-const level = levelup(leveldown(dbPath))
-
-const db = new Database({}, (name, config) => {
-  return new Store(subleveldown(level, name, { keyEncoding: 'ascii', valueEncoding: 'json' }))
-})
+const db = require('./utils/createDb.js')(dbPath)
 
 const users = [
   { id: '1', name: 'david' },
@@ -93,7 +81,6 @@ test("store range observable", t => {
 
   t.test("close and remove database", async t => {
     t.plan(1)
-    await level.close()
     rimraf(dbPath, (err) => {
       if(err) return t.fail(err)
       t.pass('removed')
