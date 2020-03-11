@@ -12,7 +12,7 @@ module.exports = function(dbPath, name) {
     env = new lmdb.Env();
     env.open({
       path: dbPath,
-      maxDbs: 10
+      maxDbs: 20
     })
     envs.set(dbPath, env)
   }

@@ -18,15 +18,22 @@ let messages = [
   { id: '4', author: '3', text: "IO XAOS" },
   { id: '5', author: '4', text: "Bye" }
 ]
+let events = [
+  { type: 'add', value: 1 },
+  { type: 'sub', value: 2 },
+  { type: 'mul', value: 10 },
+  { type: 'div', value: 3 },
+  { type: 'email', value: 'spam' }
+]
 
 function delay(ms) {
   return new Promise((resolve, reject) => setTimeout(resolve, ms))
 }
 
 test("query observable", t => {
-  t.plan(7)
+  t.plan(8)
 
-  let level, db, usersTable, messagesTable, messagesByUser
+  let level, db, usersTable, messagesTable, eventsLog, messagesByUser
 
   t.test('open database', async t => {
     t.plan(1)
@@ -38,6 +45,7 @@ test("query observable", t => {
     t.plan(1)
     usersTable = db.createTable('users')
     messagesTable = db.createTable('messages')
+    eventsLog = db.createLog('events')
     const authorMapper = (obj) => ({ id: obj.author+'_'+obj.id, to: obj.id })
     messagesByUser = await db.createIndex("messagesByUser", async (input, output) => {
       await input.table('messages').onChange((obj, oldObj) =>
@@ -50,6 +58,7 @@ test("query observable", t => {
     t.plan(1)
     for(let user of users) await usersTable.put(user)
     for(let message of messages) await messagesTable.put(message)
+    for(let event of events) await eventsLog.put(event)
     t.pass("data inserted to database")
   })
 
@@ -191,6 +200,26 @@ test("query observable", t => {
     await delay(100)
     results = await getNextValue()
     t.deepEqual(results, jsResult())
+  })
+
+  t.test("query events", async t => {
+    t.plan(3)
+    queryObservable = db.queryObservable(async (input, output) => {
+      await input.log('events').onChange((obj, oldObj) => output.change(obj, oldObj) )
+    })
+    queryObservable.observe(queryObserver)
+    const results = await getNextValue()
+    t.deepEqual(results.map(r=>({ type: r.type, value: r.value })), events, 'query result')
+
+    const newEvent = { type:"post", value:"lol" }
+    events.push(newEvent)
+    await eventsLog.put(newEvent)
+    await delay(100)
+    let updated = await getNextValue()
+    t.deepEqual(updated.map(r=>({ type: r.type, value: r.value })), events)
+
+    queryObservable.unobserve(queryObserver)
+    t.pass('unobserved')
   })
 
   t.test("close and remove database", async t => {

@@ -18,15 +18,22 @@ let messages = [
   { id: '4', author: '3', text: "IO XAOS" },
   { id: '5', author: '4', text: "Bye" }
 ]
+let events = [
+  { type: 'add', value: 1 },
+  { type: 'sub', value: 2 },
+  { type: 'add', value: 10 },
+  { type: 'div', value: 3 },
+  { type: 'add', value: 30 }
+]
 
 function delay(ms) {
   return new Promise((resolve, reject) => setTimeout(resolve, ms))
 }
 
 test("index", t => {
-  t.plan(7)
+  t.plan(8)
 
-  let level, db, usersTable, messagesTable, messagesByUser, userByName
+  let level, db, usersTable, messagesTable, eventsLog, messagesByUser, userByName
 
   t.test('open database', async t => {
     t.plan(1)
@@ -38,6 +45,7 @@ test("index", t => {
     t.plan(1)
     usersTable = db.createTable('users')
     messagesTable = db.createTable('messages')
+    eventsLog = db.createLog('events')
     t.pass('tables created')
   })
 
@@ -45,6 +53,7 @@ test("index", t => {
     t.plan(1)
     for(let user of users) await usersTable.put(user)
     for(let message of messages) await messagesTable.put(message)
+    for(let event of events) await eventsLog.put(event)
     t.pass("data inserted to database")
   })
 
@@ -156,6 +165,25 @@ test("index", t => {
     results = await index.rangeGet({})
     t.deepEqual(results, jsResult())
 
+  })
+
+  t.test("create events index by type", async t => {
+    t.plan(2)
+    const mapper = (obj) => ({ id: obj.type+'_'+obj.id, to: obj.id })
+    const index = await db.createIndex("eventsByType", async (input, output) => {
+      await input.log('events').onChange((obj, oldObj) =>
+          output.change(obj && mapper(obj), oldObj && mapper(oldObj)) )
+    })
+    await delay(100)
+    let results = await index.rangeGet({})
+    t.equal(results.length, events.length, 'query result')
+
+    const newEvent = { id: '7', name: 'henry' }
+    events.push(newEvent)
+    await eventsLog.put(newEvent)
+    await delay(100)
+    results = await index.rangeGet({})
+    t.deepEqual(results.length, events.length)
   })
 
   t.test("close and remove database", async t => {

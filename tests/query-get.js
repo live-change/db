@@ -18,16 +18,24 @@ const messages = [
   { id: '4', author: '3', text: "IO XAOS" },
   { id: '5', author: '4', text: "Bye" }
 ]
+const events = [
+  { type: 'add', value: 1 },
+  { type: 'sub', value: 2 },
+  { type: 'mul', value: 10 },
+  { type: 'div', value: 3 },
+  { type: 'email', value: 'spam' }
+]
 
 test("store range observable", t => {
-  t.plan(6)
+  t.plan(7)
 
-  let usersTable, messagesTable, userByName, messagesByUser
+  let usersTable, messagesTable, eventsLog, userByName, messagesByUser
 
   t.test("create tables and indexes", async t => {
     t.plan(1)
     usersTable = db.createTable('users')
     messagesTable = db.createTable('messages')
+    eventsLog = db.createLog('events')
     const nameMapper = (obj) => ({ id: obj.name+'_'+obj.id, to: obj.id })
     userByName = await db.createIndex("userByName", async (input, output) => {
       await input.table('users').onChange((obj, oldObj) =>
@@ -38,6 +46,7 @@ test("store range observable", t => {
       await input.table('messages').onChange((obj, oldObj) =>
           output.change(obj && authorMapper(obj), oldObj && authorMapper(oldObj)) )
     })
+
     t.pass('tables and indexes created')
   })
 
@@ -45,6 +54,7 @@ test("store range observable", t => {
     t.plan(1)
     for(let user of users) await usersTable.put(user)
     for(let message of messages) await messagesTable.put(message)
+    for(let event of events) await eventsLog.put(event)
     t.pass("data inserted to database")
   })
 
@@ -77,7 +87,13 @@ test("store range observable", t => {
     t.deepEqual(results, messages.map(msg => ({ user: users.find( u => u.id == msg.author ), ...msg })))
   })
 
-
+  t.test("query events from log", async t => {
+    t.plan(1)
+    const results = await db.queryGet(async (input, output) => {
+      await input.log('events').onChange((obj, oldObj) => output.change(obj, oldObj) )
+    })
+    t.deepEqual(results.map(r=>({ type: r.type, value: r.value })), events, 'query result')
+  })
 
   t.test("close and remove database", async t => {
     t.plan(1)

@@ -1,10 +1,10 @@
 {
   "name": "@live-change/db",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Database with observable data for live queries",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test tape tests/*"
+    "test": "NODE_ENV=test tape tests/*.js"
   },
   "repository": {
     "type": "git",
