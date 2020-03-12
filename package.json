@@ -6,6 +6,9 @@
   "scripts": {
     "test": "NODE_ENV=test tape tests/*.js"
   },
+  "bin": {
+    "livechangedb": "./bin/server.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/live-change/db.git"
@@ -23,15 +26,17 @@
   "devDependencies": {
     "@live-change/db-store-level": "^0.1.6",
     "@live-change/db-store-lmdb": "^0.1.0",
-    "rimraf": "^3.0.0",
-    "tape": "^4.11.0",
     "encoding-down": "^6.3.0",
+    "level-rocksdb": "^4.0.0",
     "leveldown": "^5.4.1",
     "levelup": "^4.3.2",
     "memdown": "^5.1.0",
+    "node-lmdb": "^0.8.0",
+    "rimraf": "^3.0.0",
     "rocksdb": "^4.1.0",
     "subleveldown": "^4.1.4",
-    "node-lmdb": "^0.8.0"
+    "tape": "^4.11.0",
+    "yargs": "^15.3.0"
   },
   "dependencies": {
     "@live-change/dao": "^0.2.3",
