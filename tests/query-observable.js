@@ -82,7 +82,10 @@ test("query observable", t => {
   t.test("query users", async t => {
     t.plan(4)
     queryObservable = db.queryObservable(async (input, output) => {
-      await input.table('users').onChange((obj, oldObj) => output.change(obj, oldObj) )
+      await (await input.table('users')).onChange((obj, oldObj) => {
+        console.log("CCH!", obj)
+        output.change(obj, oldObj)
+      } )
     })
     queryObservable.observe(queryObserver)
     const results = await getNextValue()
@@ -112,7 +115,7 @@ test("query observable", t => {
     gotNextValue = false
     const mapper = (obj) => ({ id: obj.name+'_'+obj.id, to: obj.id })
     queryObservable = db.queryObservable(async (input, output) => {
-      await input.table('users').onChange((obj, oldObj) =>
+      await (await input.table('users')).onChange((obj, oldObj) =>
           output.change(obj && mapper(obj), oldObj && mapper(oldObj)) )
     })
     queryObservable.observe(queryObserver)
@@ -148,25 +151,32 @@ test("query observable", t => {
     t.plan(5)
     gotNextValue = false
     queryObservable = db.queryObservable(async (input, output) => {
-      await input.table('messages').onChange((obj, oldObj) => {
+      const messagesTable = await input.table('messages')
+      const usersTable = await input.table('users')
+      const messagesByUser = await input.index('messagesByUser')
+      await messagesTable.onChange((obj, oldObj) => {
         return output.synchronized(obj ? obj.id : oldObj.id, async () => {
-          const user = obj && await input.table('users').object(obj.author).get()
+          const user = obj && await usersTable.object(obj.author).get()
           output.change(obj && { user, ...obj }, oldObj)
         })
       })
-      await input.table('users').onChange((obj, oldObj) => {
+      await usersTable.onChange((obj, oldObj) => {
         const userId = obj ? obj.id : oldObj.id
         return output.synchronized('u_'+userId, async () => {
-          const messageIds = await input.index('messagesByUser').range({ gte: userId, lt: userId + '\xFF' }).get()
+          const messageIds = await messagesByUser.range({ gte: userId, lt: userId + '\xFF' }).get()
           return Promise.all(messageIds.map(async mid => {
-            const message = await input.table('messages').object(mid.to).get()
+            const message = await messagesTable.object(mid.to).get()
+            console.log("UI MSG 0 ", message)
             if(message) await output.synchronized(message.id, async () => {
+              console.log("UI MSG", message)
               output.change({ user: obj, ...message }, { user: oldObj, ...message })
             })
           }))
         })
       })
     })
+
+    console.log("MESSAGES", await db.table('messages').rangeGet({}))
 
     const jsResult = () => messages.map(msg => ({ user: users.find( u => u.id == msg.author ) || null, ...msg }))
 
