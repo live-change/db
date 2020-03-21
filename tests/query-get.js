@@ -27,7 +27,7 @@ const events = [
 ]
 
 test("store range observable", t => {
-  t.plan(7)
+  t.plan(8)
 
   let usersTable, messagesTable, eventsLog, userByName, messagesByUser
 
@@ -93,6 +93,18 @@ test("store range observable", t => {
       await input.log('events').onChange((obj, oldObj) => output.change(obj, oldObj) )
     })
     t.deepEqual(results.map(r=>({ type: r.type, value: r.value })), events, 'query result')
+  })
+
+  t.test("update messsages with reactions", async t => {
+    t.plan(2)
+    const results = await db.queryGet(async (input, output) => {
+      await input.table("messages").onChange((obj, oldObj) => {
+        if(obj) output.table("messages").update(obj.id, [{ op: 'merge', value: { reactions: ['like'] }}])
+      })
+    })
+    t.pass('query returned successfully')
+    const updated = await db.table('messages').rangeGet({})
+    t.deepEqual(updated, messages.map(m => ({ ...m, reactions: ['like'] })) ,'data updated')
   })
 
   t.test("close and remove database", async t => {
