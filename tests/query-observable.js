@@ -46,8 +46,8 @@ test("query observable", t => {
     usersTable = db.createTable('users')
     messagesTable = db.createTable('messages')
     eventsLog = db.createLog('events')
-    const authorMapper = (obj) => ({ id: obj.author+'_'+obj.id, to: obj.id })
     messagesByUser = await db.createIndex("messagesByUser", async (input, output) => {
+      const authorMapper = (obj) => ({ id: obj.author+'_'+obj.id, to: obj.id })
       await input.table('messages').onChange((obj, oldObj) =>
           output.change(obj && authorMapper(obj), oldObj && authorMapper(oldObj)) )
     })

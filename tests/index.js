@@ -63,6 +63,7 @@ test("index", t => {
     t.plan(4)
     const mapper = (obj) => ({ id: obj.name+'_'+obj.id, to: obj.id })
     const index = await db.createIndex("userByName", async (input, output) => {
+      const mapper = (obj) => ({ id: obj.name+'_'+obj.id, to: obj.id })
       await input.table('users').onChange((obj, oldObj) =>
           output.change(obj && mapper(obj), oldObj && mapper(oldObj)) )
     })
@@ -95,8 +96,8 @@ test("index", t => {
 
   t.test("create messages by user index", async t => {
     t.plan(1)
-    const authorMapper = (obj) => ({ id: obj.author+'_'+obj.id, to: obj.id })
     messagesByUser = await db.createIndex("messagesByUser", async (input, output) => {
+      const authorMapper = (obj) => ({ id: obj.author+'_'+obj.id, to: obj.id })
       await input.table('messages').onChange((obj, oldObj) =>
           output.change(obj && authorMapper(obj), oldObj && authorMapper(oldObj)) )
     })
@@ -169,8 +170,8 @@ test("index", t => {
 
   t.test("create events index by type", async t => {
     t.plan(2)
-    const mapper = (obj) => ({ id: obj.type+'_'+obj.id, to: obj.id })
     const index = await db.createIndex("eventsByType", async (input, output) => {
+      const mapper = (obj) => ({ id: obj.type+'_'+obj.id, to: obj.id })
       await input.log('events').onChange((obj, oldObj) =>
           output.change(obj && mapper(obj), oldObj && mapper(oldObj)) )
     })
