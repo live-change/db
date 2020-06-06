@@ -97,7 +97,7 @@ test("store range observable", t => {
 
   t.test("update messsages with reactions", async t => {
     t.plan(2)
-    const results = await db.queryGet(async (input, output) => {
+    const results = await db.queryUpdate(async (input, output) => {
       await input.table("messages").onChange((obj, oldObj) => {
         if(obj) output.table("messages").update(obj.id, [{ op: 'merge', value: { reactions: ['like'] }}])
       })

@@ -21,19 +21,21 @@
   },
   "homepage": "https://github.com/live-change/db",
   "devDependencies": {
-    "@live-change/db-store-level": "^0.1.6",
-    "@live-change/db-store-lmdb": "^0.1.0",
+    "@live-change/db-store-level": "^0.1.9",
+    "@live-change/db-store-lmdb": "^0.1.8",
     "encoding-down": "^6.3.0",
     "level-rocksdb": "^4.0.0",
-    "leveldown": "^5.4.1",
-    "levelup": "^4.3.2",
+    "leveldown": "^5.6.0",
+    "levelup": "^4.4.0",
     "memdown": "^5.1.0",
     "node-lmdb": "^0.8.0",
-    "rimraf": "^3.0.0",
+    "rimraf": "^3.0.2",
     "rocksdb": "^4.1.0",
     "sockjs": "^0.3.20",
     "subleveldown": "^4.1.4",
-    "tape": "^4.11.0"
+    "tape": "^4.13.3",
+    "websocket-extensions": ">=0.1.4",
+    "minimist": ">=1.2.3"
   },
   "dependencies": {
     "@live-change/dao": "^0.2.9",
