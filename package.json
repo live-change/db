@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@live-change/dao": "^0.2.17",
+    "get-random-values": "^1.2.2",
     "node-interval-tree": "^1.3.3"
   }
 }
