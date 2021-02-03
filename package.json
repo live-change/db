@@ -1,6 +1,6 @@
 {
   "name": "@live-change/db",
-  "version": "0.3.50",
+  "version": "0.3.51",
   "description": "Database with observable data for live queries",
   "main": "index.js",
   "scripts": {
